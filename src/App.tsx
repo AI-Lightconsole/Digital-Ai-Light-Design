@@ -312,9 +312,9 @@ The image will show the stage with these ${ctx.fixture} fixtures installed and a
         </button>
       </div>
 
-      <div className="flex flex-col xl:flex-row h-[calc(100vh-52px)]">
+      <div className="flex flex-col xl:flex-row xl:h-[calc(100vh-52px)]">
         {/* ── 왼쪽 컨트롤 패널 ── */}
-        <div className="w-full xl:w-[420px] xl:flex-shrink-0 bg-white border-b xl:border-b-0 xl:border-r border-gray-200 overflow-y-auto p-4 flex flex-col gap-5">
+        <div className="w-full xl:w-[420px] xl:flex-shrink-0 bg-white border-b xl:border-b-0 xl:border-r border-gray-200 xl:overflow-y-auto p-4 flex flex-col gap-5">
 
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -465,7 +465,7 @@ The image will show the stage with these ${ctx.fixture} fixtures installed and a
         </div>
 
         {/* ── 오른쪽 결과 패널 ── */}
-        <div className="flex-1 p-5 overflow-y-auto bg-gray-50">
+        <div className="flex-1 p-5 xl:overflow-y-auto bg-gray-50">
           {!prompts && !isGenerating && (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
               <div className="w-16 h-16 border border-gray-300 rounded-xl flex items-center justify-center mb-3">

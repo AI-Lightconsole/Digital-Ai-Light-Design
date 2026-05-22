@@ -171,7 +171,7 @@ export default function App() {
 
   const generatePrompts = async () => {
     if (!uploadedImageBase64) { setError('무대 이미지를 먼저 업로드해주세요'); return }
-    if (markers.length === 0) { setError('위치를 최소 1개 이상 지정해주세요'); return }
+    if (shotType === 'front' && markers.length === 0) { setError('위치를 최소 1개 이상 지정해주세요'); return }
 
     setIsGenerating(true)
     setError(null)
@@ -573,7 +573,7 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
               className="w-full text-xs p-2.5 border border-gray-200 rounded-md bg-gray-50 resize-none h-14 focus:outline-none focus:border-green-400" />
           </div>
 
-          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage || markers.length === 0}
+          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage || (shotType === 'front' && markers.length === 0)}
             className="w-full py-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
             {isGenerating
               ? <><Loader2 size={15} className="animate-spin" /> 3개 AI 프롬프트 생성 중...</>

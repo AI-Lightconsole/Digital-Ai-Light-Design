@@ -187,39 +187,44 @@ export default function App() {
     const systemInstruction = isSide
       ? `You are an expert AI image prompt engineer specializing in professional stage lighting design.
 
-The user is creating a SIDE PANEL image — a left/right extension panel that will be placed beside a main front stage image on a wide media wall. Generate THREE prompts, each optimized for a different AI image generator.
+The user is creating a SIDE PANEL image — a left/right extension panel placed BESIDE a separate center stage image on a wide media wall. The center stage image already exists; the user owns it separately. This side panel will be attached next to it.
 
 **ABSOLUTE RULES — apply to all 3 prompts:**
 
-1. This is a SIDE EXTENSION of a stage — it must visually continue the same stage space: same wall material, same floor, same ceiling/truss structure, same overall atmosphere as a typical broadcast stage. It will be mirrored and attached to both sides of a center image, so it must blend seamlessly.
+1. DO NOT include or reproduce the center stage. The center stage (main stage structure, center LED screen, center truss) must NOT appear in this image. This panel shows ONLY the side extension area — the zone that extends outward beyond the center stage.
 
-2. ASPECT RATIO: ${sideRatioText}.
+2. SEAMLESS TONE MATCH. The side panel must match the attached reference image's color palette, lighting tone, brightness and overall mood exactly, so that when placed beside the center stage it blends into one continuous stage with no visible seam.
 
-3. ${ctx.sideWithFixtures
-  ? 'INCLUDE lighting fixtures — the same fixtures as the front stage must continue into this side panel, matching beam shape, color and installation, so the whole media wall reads as one continuous lighting design.'
-  : 'NO lighting fixtures — this is a clean stage side panel WITHOUT any lighting equipment. Only the bare stage structure.'}
+3. INDEPENDENT SIDE DESIGN. The side panel is its own design — it does NOT copy the center stage. It can be an LED pattern wall, neon line structure, or other stage side wall design, as long as the tone matches. Do not duplicate the center stage layout.
 
-4. REALISTIC FIXTURE SCALE relative to the stage. Fixtures must never look oversized.
+4. ASPECT RATIO: ${sideRatioText}. The entire frame is the side extension area — fill it completely with the side panel, no center stage included.
+
+5. ${ctx.sideWithFixtures
+  ? 'INCLUDE lighting fixtures that visually continue the lighting design of the center stage, matching beam shape and color.'
+  : 'NO lighting fixtures — clean side wall design without lighting equipment.'}
 
 The same concept must be expressed in 3 formats:
 
 **MIDJOURNEY (v7) format:**
 - Short, dense, comma-separated visual keywords, 30-50 words
-- Begin with: "stage side extension panel, seamless continuation of broadcast stage"
-- End with: ${ctx.sideRatio === '2.7:1' ? '--ar 19:7 --v 7 --style raw --iw 3' : '--ar 16:9 --v 7 --style raw --iw 3'}
-- Emphasize seamless blending, matching stage material, broadcast photography aesthetic
+- Begin with: "stage side extension wall, independent side panel design, no center stage"
+- End with: ${ctx.sideRatio === '2.7:1' ? '--ar 19:7 --v 7 --style raw --iw 2' : '--ar 16:9 --v 7 --style raw --iw 2'}
+- Emphasize matching color palette and lighting tone, broadcast stage aesthetic, seamless blend
 
 **CHATGPT (DALL-E 3) format:**
 - Natural language descriptive paragraph, 60-100 words
-- Describe a side extension panel of a broadcast stage in ${sideRatioText}
-- Emphasize photorealism and seamless visual continuity with a main stage
+- Describe a side extension wall panel in ${sideRatioText}, NOT including the center stage
+- Emphasize matching the reference image's colors, lighting tone and mood for a seamless blend
 
 **GEMINI (Nano Banana 이미지 생성) format — IMPORTANT:**
 - 한국어 이미지 생성 명령문 (Korean image GENERATION command — NOT analysis)
-- 반드시 첫 문장은 "방송 무대의 측면 확장 패널 이미지를 생성해줘. 메인 무대 옆에 붙일 좌우 확장용 이미지야." 로 시작
+- 반드시 첫 문장은 "무대 측면 확장용 이미지를 생성해줘. 중앙 무대는 빼고, 중앙 옆에 붙일 측면 벽 디자인만 만들어줘." 로 시작
+- 중앙 무대 구조는 절대 포함하지 말 것을 명시
+- 첨부된 참조 이미지의 색감·조명 톤·밝기·분위기를 똑같이 맞춰서 옆에 붙였을 때 이음새 없이 어울리도록 명시
+- 측면은 중앙을 복제하지 않은 독립적인 디자인(LED 벽, 네온 구조 등)임을 명시
 - ${sideRatioText} 를 한국어로 명시 (가로로 긴 와이드 비율)
-- ${ctx.sideWithFixtures ? '정면 무대와 동일한 조명 장비가 측면까지 이어지도록 명시' : '조명 장비 없이 깨끗한 무대 측면 구조만 명시'}
-- 마지막 줄에 반드시: "이미지를 새로 만들어서 보여줘. 분석 말고 결과 이미지를 생성해줘. 방송용 고화질."
+- ${ctx.sideWithFixtures ? '중앙 무대 조명과 이어지는 조명 장비 포함을 명시' : '조명 장비 없이 깨끗한 측면 벽 디자인만 명시'}
+- 마지막 줄에 반드시: "이미지를 새로 만들어서 보여줘. 분석 말고 결과 이미지를 생성해줘. 방송용 고화질, 중앙 무대는 포함하지 말 것."
 - 총 80-150 단어, 절대 영어 금지, 무조건 명령형
 
 Output JSON only.`

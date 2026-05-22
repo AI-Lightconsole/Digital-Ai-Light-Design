@@ -7,6 +7,8 @@ const client = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY })
 type LightType = 'sharpy' | 'macaura' | 'quantum' | 'titan' | 'strike4'
 type StageSize = 'small' | 'medium' | 'large' | 'stargla'
 type AITarget = 'midjourney' | 'chatgpt' | 'gemini'
+type ShotType = 'front' | 'side'
+type SideRatio = '16:9' | '2.7:1'
 
 interface Marker { x: number; y: number }
 interface AIPrompts {
@@ -62,6 +64,9 @@ export default function App() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null)
   const [stageSize, setStageSize] = useState<StageSize>('medium')
+  const [shotType, setShotType] = useState<ShotType>('front')
+  const [sideRatio, setSideRatio] = useState<SideRatio>('16:9')
+  const [sideWithFixtures, setSideWithFixtures] = useState(true)
   const [lightType, setLightType] = useState<LightType>('sharpy')
   const [markers, setMarkers] = useState<Marker[]>([])
   const [selectedInstall, setSelectedInstall] = useState<string[]>([])
@@ -150,6 +155,9 @@ export default function App() {
     const totalFixtures = markers.length * 2
 
     return {
+      shot: shotType,
+      sideRatio: sideRatio,
+      sideWithFixtures: sideWithFixtures,
       stage: stageCfg.promptText,
       scale: stageCfg.scaleNote,
       fixture: `${light.brand} ${light.label} (${light.type} type)`,
@@ -171,7 +179,51 @@ export default function App() {
 
     const ctx = buildContext()
 
-    const systemInstruction = `You are an expert AI image prompt engineer specializing in professional stage lighting design.
+    const isSide = ctx.shot === 'side'
+    const sideRatioText = ctx.sideRatio === '2.7:1'
+      ? 'wide panoramic side panel, approximately 2.7:1 aspect ratio (much wider than tall)'
+      : 'standard 16:9 side panel'
+
+    const systemInstruction = isSide
+      ? `You are an expert AI image prompt engineer specializing in professional stage lighting design.
+
+The user is creating a SIDE PANEL image — a left/right extension panel that will be placed beside a main front stage image on a wide media wall. Generate THREE prompts, each optimized for a different AI image generator.
+
+**ABSOLUTE RULES — apply to all 3 prompts:**
+
+1. This is a SIDE EXTENSION of a stage — it must visually continue the same stage space: same wall material, same floor, same ceiling/truss structure, same overall atmosphere as a typical broadcast stage. It will be mirrored and attached to both sides of a center image, so it must blend seamlessly.
+
+2. ASPECT RATIO: ${sideRatioText}.
+
+3. ${ctx.sideWithFixtures
+  ? 'INCLUDE lighting fixtures — the same fixtures as the front stage must continue into this side panel, matching beam shape, color and installation, so the whole media wall reads as one continuous lighting design.'
+  : 'NO lighting fixtures — this is a clean stage side panel WITHOUT any lighting equipment. Only the bare stage structure.'}
+
+4. REALISTIC FIXTURE SCALE relative to the stage. Fixtures must never look oversized.
+
+The same concept must be expressed in 3 formats:
+
+**MIDJOURNEY (v7) format:**
+- Short, dense, comma-separated visual keywords, 30-50 words
+- Begin with: "stage side extension panel, seamless continuation of broadcast stage"
+- End with: ${ctx.sideRatio === '2.7:1' ? '--ar 19:7 --v 7 --style raw --iw 3' : '--ar 16:9 --v 7 --style raw --iw 3'}
+- Emphasize seamless blending, matching stage material, broadcast photography aesthetic
+
+**CHATGPT (DALL-E 3) format:**
+- Natural language descriptive paragraph, 60-100 words
+- Describe a side extension panel of a broadcast stage in ${sideRatioText}
+- Emphasize photorealism and seamless visual continuity with a main stage
+
+**GEMINI (Nano Banana 이미지 생성) format — IMPORTANT:**
+- 한국어 이미지 생성 명령문 (Korean image GENERATION command — NOT analysis)
+- 반드시 첫 문장은 "방송 무대의 측면 확장 패널 이미지를 생성해줘. 메인 무대 옆에 붙일 좌우 확장용 이미지야." 로 시작
+- ${sideRatioText} 를 한국어로 명시 (가로로 긴 와이드 비율)
+- ${ctx.sideWithFixtures ? '정면 무대와 동일한 조명 장비가 측면까지 이어지도록 명시' : '조명 장비 없이 깨끗한 무대 측면 구조만 명시'}
+- 마지막 줄에 반드시: "이미지를 새로 만들어서 보여줘. 분석 말고 결과 이미지를 생성해줘. 방송용 고화질."
+- 총 80-150 단어, 절대 영어 금지, 무조건 명령형
+
+Output JSON only.`
+      : `You are an expert AI image prompt engineer specializing in professional stage lighting design.
 
 Given a stage image and lighting specifications, generate THREE prompts for COMPOSITING the specified lighting fixtures onto the EXISTING stage — each optimized for a different AI image generator.
 
@@ -216,7 +268,17 @@ All 3 prompts must describe the SAME lighting setup but in each AI's preferred s
 
 Output JSON only.`
 
-    const userPrompt = `Generate AI image prompts for compositing these lights onto the stage:
+    const userPrompt = isSide
+      ? `Generate AI image prompts for a STAGE SIDE PANEL:
+
+- Aspect ratio: ${sideRatioText}
+- Stage scale: ${ctx.stage}
+- Fixture scale guidance: ${ctx.scale}
+- Lighting fixtures: ${ctx.sideWithFixtures ? `INCLUDE — ${ctx.fixture}, ${ctx.beam}, ${ctx.install}, matching the front stage` : 'NONE — clean stage side panel without fixtures'}
+${ctx.custom ? `- Additional direction: ${ctx.custom}` : ''}
+
+This side panel will be mirrored and attached beside a main front stage image. It must blend seamlessly as one continuous stage.`
+      : `Generate AI image prompts for compositing these lights onto the stage:
 
 - Stage scale: ${ctx.stage}
 - Fixture scale guidance: ${ctx.scale}
@@ -326,6 +388,48 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
       <div className="flex flex-col xl:flex-row xl:h-[calc(100vh-52px)]">
         {/* ── 왼쪽 컨트롤 패널 ── */}
         <div className="w-full xl:w-[420px] xl:flex-shrink-0 bg-white border-b xl:border-b-0 xl:border-r border-gray-200 xl:overflow-y-auto p-4 flex flex-col gap-5">
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-gray-700">작업 종류</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 mb-2">
+              {(['front', 'side'] as ShotType[]).map(s => (
+                <button key={s} onClick={() => setShotType(s)}
+                  className={`py-2 rounded-lg border-2 text-xs font-bold transition-all ${shotType === s ? 'bg-green-50 border-green-500 text-green-600' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'}`}>
+                  {s === 'front' ? '정면' : '측면'}
+                </button>
+              ))}
+            </div>
+            {shotType === 'side' && (
+              <div className="flex flex-col gap-2 mt-1">
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1.5">측면 비율</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(['16:9', '2.7:1'] as SideRatio[]).map(r => (
+                      <button key={r} onClick={() => setSideRatio(r)}
+                        className={`py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${sideRatio === r ? 'bg-green-50 border-green-500 text-green-600' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'}`}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1.5">장비 합성</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button onClick={() => setSideWithFixtures(true)}
+                      className={`py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${sideWithFixtures ? 'bg-green-50 border-green-500 text-green-600' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'}`}>
+                      켜기
+                    </button>
+                    <button onClick={() => setSideWithFixtures(false)}
+                      className={`py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${!sideWithFixtures ? 'bg-green-50 border-green-500 text-green-600' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'}`}>
+                      끄기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div>
             <div className="flex items-center gap-2 mb-2">

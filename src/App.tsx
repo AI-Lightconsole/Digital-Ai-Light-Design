@@ -27,14 +27,15 @@ const STAGE_SIZE_CONFIG: Record<StageSize, {
   label: string
   desc: string
   promptText: string
+  scaleNote: string
   cols: number
   imgPx: number
   markerPx: number
 }> = {
-  small:   { label: '소형',   desc: '~10m',  promptText: 'small stage (under 10m wide)',     cols: 2, imgPx: 80, markerPx: 28 },
-  medium:  { label: '중형',   desc: '~20m',  promptText: 'medium stage (10-20m wide)',       cols: 3, imgPx: 56, markerPx: 24 },
-  large:   { label: '대형',   desc: '~40m',  promptText: 'large stage (20-40m wide)',        cols: 4, imgPx: 44, markerPx: 20 },
-  stargla: { label: '스타글', desc: '40m+',  promptText: 'massive festival stage (40m+)',    cols: 5, imgPx: 36, markerPx: 16 },
+  small:   { label: '소형',   desc: '~10m',  promptText: 'small stage (under 10m wide)',  scaleNote: 'On this small stage, each fixture appears relatively large and clearly visible — roughly the size of a real moving-head light seen from the audience. Fixtures are prominent but still realistically proportioned to the compact stage.', cols: 2, imgPx: 80, markerPx: 28 },
+  medium:  { label: '중형',   desc: '~20m',  promptText: 'medium stage (10-20m wide)',    scaleNote: 'On this medium stage, each fixture appears at a moderate, realistic size — clearly identifiable as a professional lighting unit, proportioned naturally to the stage width.', cols: 3, imgPx: 56, markerPx: 24 },
+  large:   { label: '대형',   desc: '~40m',  promptText: 'large stage (20-40m wide)',     scaleNote: 'On this large stage, each fixture appears relatively small compared to the vast stage — like compact units mounted across a wide structure. Fixtures must NOT look oversized.', cols: 4, imgPx: 44, markerPx: 20 },
+  stargla: { label: '스타글', desc: '40m+',  promptText: 'massive festival stage (40m+)', scaleNote: 'On this massive festival stage, each fixture appears as a small point-like unit within an enormous structure. Many small fixtures across huge trusses — never large or close-up.', cols: 5, imgPx: 36, markerPx: 16 },
 }
 
 const INSTALL_PRESETS = [
@@ -150,6 +151,7 @@ export default function App() {
 
     return {
       stage: stageCfg.promptText,
+      scale: stageCfg.scaleNote,
       fixture: `${light.brand} ${light.label} (${light.type} type)`,
       count: totalFixtures,
       symmetry: 'perfect left-right symmetric layout',
@@ -171,33 +173,41 @@ export default function App() {
 
     const systemInstruction = `You are an expert AI image prompt engineer specializing in professional stage lighting design.
 
-Given a stage image and lighting specifications, generate THREE prompts for compositing the specified lighting fixtures onto the stage — each optimized for a different AI image generator.
+Given a stage image and lighting specifications, generate THREE prompts for COMPOSITING the specified lighting fixtures onto the EXISTING stage — each optimized for a different AI image generator.
+
+**TWO ABSOLUTE RULES — apply to all 3 prompts:**
+
+1. PRESERVE THE ORIGINAL STAGE. The uploaded stage image is the fixed base. Keep its background, structure, perspective, and composition exactly as they are. Only ADD lighting fixtures onto it. Do NOT redraw, reinvent, or replace the stage. This is a compositing task, not a new image creation.
+
+2. REALISTIC FIXTURE SCALE. The size of each lighting fixture must be realistically proportioned to the stage scale. Fixtures must never look oversized or undersized relative to the stage. Follow the provided scale guidance precisely.
 
 The same lighting concept must be expressed in 3 different formats:
 
 **MIDJOURNEY (v7) format:**
 - Short, dense, comma-separated visual keywords
 - 30-50 words
-- End with: --ar 16:9 --v 7 --style raw --q 2
-- Emphasize: cinematic lighting quality, atmosphere, professional broadcast photography aesthetic
-- Example pattern: "concert stage lighting, [fixture details], [installation], [beam style], [atmosphere], broadcast photography, photorealistic --ar 16:9 --v 7 --style raw --q 2"
+- Begin with a clear compositing instruction: "stage lighting fixtures composited onto the existing stage, original stage preserved"
+- End with: --ar 16:9 --v 7 --style raw --iw 3
+- Emphasize: the fixtures must match the stage, realistic fixture scale, professional broadcast photography aesthetic
+- Example pattern: "lighting fixtures composited onto existing stage, original stage preserved, [fixture details], [realistic scale], [installation], [beam style], broadcast photography --ar 16:9 --v 7 --style raw --iw 3"
 
 **CHATGPT (DALL-E 3) format:**
 - Natural language descriptive paragraph
 - 60-100 words
-- Emphasize photorealism, professional broadcast photography, specific lighting positions
-- Describe the scene as if directing a photographer
-- Use full sentences
+- Begin by stating the uploaded stage image must be kept and the fixtures added onto it
+- Emphasize photorealism, realistic fixture scale relative to the stage, professional broadcast photography, specific lighting positions
+- Describe the scene as if directing a photographer doing a composite
 
 **GEMINI (Nano Banana 이미지 생성) format — IMPORTANT:**
 - 한국어 이미지 생성 명령문 (Korean image GENERATION command — NOT analysis)
-- 반드시 첫 문장은 "첨부된 무대 이미지를 편집해서 새 이미지를 생성해줘." 로 시작 (이미지 생성 트리거)
+- 반드시 첫 문장은 "첨부된 무대 이미지를 편집해서 새 이미지를 생성해줘. 기존 무대 배경과 구조는 그대로 유지하고 조명 장비만 추가해줘." 로 시작
 - 그 다음 줄에 구체적인 합성 지시:
   - 어떤 장비를 (브랜드/모델/타입)
   - 어디에 (설치 위치)
   - 어떤 빔 (형태, 색)
   - 몇 개를 (좌우 대칭, 수량)
-- 마지막 줄에 반드시: "이미지를 새로 만들어서 보여줘. 분석 말고 결과 이미지를 생성해줘. 방송용 고화질, 기존 무대 배경은 유지."
+  - 장비 크기는 무대 규모에 사실적으로 비례하도록 명시
+- 마지막 줄에 반드시: "이미지를 새로 만들어서 보여줘. 분석 말고 결과 이미지를 생성해줘. 방송용 고화질, 기존 무대 배경은 유지, 장비 크기는 무대에 맞게."
 - 총 80-150 단어
 - 절대 영어 사용 금지
 - 절대 묘사형/설명형 금지. 무조건 명령형 ("~해줘", "~만들어줘")
@@ -209,6 +219,7 @@ Output JSON only.`
     const userPrompt = `Generate AI image prompts for compositing these lights onto the stage:
 
 - Stage scale: ${ctx.stage}
+- Fixture scale guidance: ${ctx.scale}
 - Fixture: ${ctx.fixture}
 - Total fixtures: ${ctx.count}
 - Layout: ${ctx.symmetry}, ${markers.length} positions per side
@@ -216,7 +227,7 @@ Output JSON only.`
 - Beam shape: ${ctx.beam}
 ${ctx.custom ? `- Additional direction: ${ctx.custom}` : ''}
 
-The image will show the stage with these ${ctx.fixture} fixtures installed and active.`
+The image will show the EXISTING stage with these ${ctx.fixture} fixtures composited onto it. Keep the original stage; only add the fixtures at a realistic scale.`
 
     try {
       const response = await client.models.generateContent({

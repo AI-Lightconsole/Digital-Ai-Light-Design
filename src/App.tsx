@@ -5,7 +5,7 @@ import { Upload, Zap, RotateCcw, Copy, Check, Send, Loader2, Sparkles, ExternalL
 const client = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY })
 
 type LightType = 'sharpy' | 'macaura' | 'quantum' | 'titan' | 'strike4'
-type StageSize = 'small' | 'medium' | 'large' | 'stargla'
+type StageSize = 'small' | 'medium' | 'large' | 'stadium'
 type AITarget = 'midjourney' | 'chatgpt' | 'gemini'
 type ShotType = 'front' | 'side'
 type SideRatio = '16:9' | '2.7:1'
@@ -37,7 +37,7 @@ const STAGE_SIZE_CONFIG: Record<StageSize, {
   small:   { label: '소형',   desc: '~10m',  promptText: 'small stage (under 10m wide)',  scaleNote: 'On this small stage, each fixture appears relatively large and clearly visible — roughly the size of a real moving-head light seen from the audience. Fixtures are prominent but still realistically proportioned to the compact stage.', cols: 2, imgPx: 80, markerPx: 28 },
   medium:  { label: '중형',   desc: '~20m',  promptText: 'medium stage (10-20m wide)',    scaleNote: 'On this medium stage, each fixture appears at a moderate, realistic size — clearly identifiable as a professional lighting unit, proportioned naturally to the stage width.', cols: 3, imgPx: 56, markerPx: 24 },
   large:   { label: '대형',   desc: '~40m',  promptText: 'large stage (20-40m wide)',     scaleNote: 'On this large stage, each fixture appears relatively small compared to the vast stage — like compact units mounted across a wide structure. Fixtures must NOT look oversized.', cols: 4, imgPx: 44, markerPx: 20 },
-  stargla: { label: '스타글', desc: '40m+',  promptText: 'massive festival stage (40m+)', scaleNote: 'On this massive festival stage, each fixture appears as a small point-like unit within an enormous structure. Many small fixtures across huge trusses — never large or close-up.', cols: 5, imgPx: 36, markerPx: 16 },
+  stadium: { label: '스타디움', desc: '40m+',  promptText: 'massive festival stage (40m+)', scaleNote: 'On this massive festival stage, each fixture appears as a small point-like unit within an enormous structure. Many small fixtures across huge trusses — never large or close-up.', cols: 5, imgPx: 36, markerPx: 16 },
 }
 
 const INSTALL_PRESETS = [
@@ -69,6 +69,8 @@ export default function App() {
   const [sideWithFixtures, setSideWithFixtures] = useState(true)
   const [lightType, setLightType] = useState<LightType>('sharpy')
   const [markers, setMarkers] = useState<Marker[]>([])
+  const [markerHistory, setMarkerHistory] = useState<Marker[][]>([[]])
+  const [historyIndex, setHistoryIndex] = useState(0)
   const [selectedInstall, setSelectedInstall] = useState<string[]>([])
   const [selectedBeam, setSelectedBeam] = useState<string[]>([])
   const [customPrompt, setCustomPrompt] = useState('')
@@ -140,7 +142,26 @@ export default function App() {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
-    setMarkers(prev => [...prev, { x, y }])
+    const newMarkers = [...markers, { x, y }]
+    const newHistory = markerHistory.slice(0, historyIndex + 1)
+    newHistory.push(newMarkers)
+    setMarkerHistory(newHistory)
+    setHistoryIndex(newHistory.length - 1)
+    setMarkers(newMarkers)
+  }
+
+  const undoMarker = () => {
+    if (historyIndex <= 0) return
+    const prev = historyIndex - 1
+    setHistoryIndex(prev)
+    setMarkers(markerHistory[prev])
+  }
+
+  const redoMarker = () => {
+    if (historyIndex >= markerHistory.length - 1) return
+    const next = historyIndex + 1
+    setHistoryIndex(next)
+    setMarkers(markerHistory[next])
   }
 
   const togglePreset = (id: string, selected: string[], setSelected: (v: string[]) => void) => {
@@ -152,7 +173,7 @@ export default function App() {
     const stageCfg = STAGE_SIZE_CONFIG[stageSize]
     const installDescs = selectedInstall.map(id => INSTALL_PRESETS.find(p => p.id === id)?.prompt || '').filter(Boolean)
     const beamDescs = selectedBeam.map(id => BEAM_PRESETS.find(p => p.id === id)?.prompt || '').filter(Boolean)
-    const totalFixtures = markers.length * 2
+    const totalFixtures = markers.length > 0 ? markers.length * 2 : null
 
     return {
       shot: shotType,
@@ -171,7 +192,6 @@ export default function App() {
 
   const generatePrompts = async () => {
     if (!uploadedImageBase64) { setError('무대 이미지를 먼저 업로드해주세요'); return }
-    if (markers.length === 0) { setError('위치를 최소 1개 이상 지정해주세요'); return }
 
     setIsGenerating(true)
     setError(null)
@@ -288,8 +308,8 @@ This side panel will be mirrored and attached beside a main front stage image. I
 - Stage scale: ${ctx.stage}
 - Fixture scale guidance: ${ctx.scale}
 - Fixture: ${ctx.fixture}
-- Total fixtures: ${ctx.count}
-- Layout: ${ctx.symmetry}, ${markers.length} positions per side
+${ctx.count !== null ? `- Total fixtures: ${ctx.count}` : '- Total fixtures: unspecified (AI should determine appropriate quantity)'}
+- Layout: ${ctx.symmetry}${markers.length > 0 ? `, ${markers.length} positions per side` : ''}
 - Installation: ${ctx.install}
 - Beam shape: ${ctx.beam}
 ${ctx.custom ? `- Additional direction: ${ctx.custom}` : ''}
@@ -361,9 +381,16 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
     })
   }
 
+  const resetMarkers = () => {
+    setMarkers([])
+    setMarkerHistory([[]])
+    setHistoryIndex(0)
+  }
+
   const reset = () => {
     setUploadedImage(null); setUploadedImageBase64(null)
-    setMarkers([]); setPrompts(null)
+    setMarkers([]); setMarkerHistory([[]]); setHistoryIndex(0)
+    setPrompts(null)
     setSelectedInstall([]); setSelectedBeam([])
     setCustomPrompt(''); setError(null)
   }
@@ -531,7 +558,17 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
               </div>
               <div className="flex items-center justify-between mt-1.5">
                 <span className="text-xs text-gray-400">총 {markers.length * 2}개 (좌우 대칭)</span>
-                {markers.length > 0 && <button onClick={() => setMarkers([])} className="text-xs text-red-400 hover:text-red-600">초기화</button>}
+                <div className="flex items-center gap-2">
+                  <button onClick={undoMarker} disabled={historyIndex <= 0}
+                    className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed px-1.5 py-0.5 border border-gray-200 rounded">
+                    ↩ 실행취소
+                  </button>
+                  <button onClick={redoMarker} disabled={historyIndex >= markerHistory.length - 1}
+                    className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed px-1.5 py-0.5 border border-gray-200 rounded">
+                    ↪ 다시실행
+                  </button>
+                  {markers.length > 0 && <button onClick={resetMarkers} className="text-xs text-red-400 hover:text-red-600">초기화</button>}
+                </div>
               </div>
             </div>
           )}
@@ -573,7 +610,7 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
               className="w-full text-xs p-2.5 border border-gray-200 rounded-md bg-gray-50 resize-none h-14 focus:outline-none focus:border-green-400" />
           </div>
 
-          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage || markers.length === 0}
+          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage}
             className="w-full py-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
             {isGenerating
               ? <><Loader2 size={15} className="animate-spin" /> 3개 AI 프롬프트 생성 중...</>

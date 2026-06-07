@@ -67,7 +67,7 @@ export default function App() {
   const [shotType, setShotType] = useState<ShotType>('front')
   const [sideRatio, setSideRatio] = useState<SideRatio>('16:9')
   const [sideWithFixtures, setSideWithFixtures] = useState(true)
-  const [lightType, setLightType] = useState<LightType>('sharpy')
+  const [lightType, setLightType] = useState<LightType | null>(null)
   const [markers, setMarkers] = useState<Marker[]>([])
   const [markerHistory, setMarkerHistory] = useState<Marker[][]>([[]])
   const [historyIndex, setHistoryIndex] = useState(0)
@@ -169,7 +169,7 @@ export default function App() {
   }
 
   const buildContext = () => {
-    const light = LIGHT_INFO[lightType]
+    const light = lightType ? LIGHT_INFO[lightType] : null
     const stageCfg = STAGE_SIZE_CONFIG[stageSize]
     const installDescs = selectedInstall.map(id => INSTALL_PRESETS.find(p => p.id === id)?.prompt || '').filter(Boolean)
     const beamDescs = selectedBeam.map(id => BEAM_PRESETS.find(p => p.id === id)?.prompt || '').filter(Boolean)
@@ -181,7 +181,7 @@ export default function App() {
       sideWithFixtures: sideWithFixtures,
       stage: stageCfg.promptText,
       scale: stageCfg.scaleNote,
-      fixture: `${light.brand} ${light.label} (${light.type} type)`,
+      fixture: light ? `${light.brand} ${light.label} (${light.type} type)` : 'unspecified fixture',
       count: totalFixtures,
       symmetry: 'perfect left-right symmetric layout',
       install: installDescs.join(', ') || 'standard installation',
@@ -192,6 +192,8 @@ export default function App() {
 
   const generatePrompts = async () => {
     if (!uploadedImageBase64) { setError('무대 이미지를 먼저 업로드해주세요'); return }
+    if (shotType === 'front' && !lightType) { setError('장비를 선택해주세요'); return }
+    if (markers.length === 0) { setError('위치를 최소 1개 이상 지정해주세요'); return }
 
     setIsGenerating(true)
     setError(null)
@@ -514,7 +516,7 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
             </div>
             <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${stageCfg.cols}, 1fr)` }}>
               {(Object.keys(LIGHT_INFO) as LightType[]).map(l => (
-                <button key={l} onClick={() => setLightType(l)}
+                <button key={l} onClick={() => setLightType(lightType === l ? null : l)}
                   className={`flex flex-col items-center rounded-lg border-2 transition-all ${lightType === l ? 'bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'}`}
                   style={{
                     padding: stageCfg.imgPx >= 56 ? '8px' : stageCfg.imgPx >= 44 ? '6px' : '4px',
@@ -538,18 +540,18 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
                 <span className="text-xs text-gray-400">(한쪽만 클릭)</span>
               </div>
               <div className="relative rounded-lg overflow-hidden cursor-crosshair border-2"
-                style={{ borderColor: LIGHT_INFO[lightType].color }}
+                style={{ borderColor: lightType ? LIGHT_INFO[lightType].color : '#d1d5db' }}
                 onClick={handleMarkerClick}>
                 <img src={uploadedImage} alt="stage" className="w-full h-44 object-cover" />
                 {markers.map((m, i) => (
                   <div key={i}>
                     <div style={{ position: 'absolute', left: `${m.x}%`, top: `${m.y}%`, transform: 'translate(-50%,-50%)',
-                        background: LIGHT_INFO[lightType].color, width: `${stageCfg.markerPx}px`, height: `${stageCfg.markerPx}px` }}
+                        background: lightType ? LIGHT_INFO[lightType].color : '#6b7280', width: `${stageCfg.markerPx}px`, height: `${stageCfg.markerPx}px` }}
                       className="rounded-full border-2 border-white flex items-center justify-center pointer-events-none shadow-md">
                       <span className="text-white font-bold" style={{ fontSize: `${Math.max(6, stageCfg.markerPx * 0.35)}px` }}>{i + 1}</span>
                     </div>
                     <div style={{ position: 'absolute', left: `${100 - m.x}%`, top: `${m.y}%`, transform: 'translate(-50%,-50%)',
-                        background: LIGHT_INFO[lightType].color, opacity: 0.5, width: `${stageCfg.markerPx}px`, height: `${stageCfg.markerPx}px` }}
+                        background: lightType ? LIGHT_INFO[lightType].color : '#6b7280', opacity: 0.5, width: `${stageCfg.markerPx}px`, height: `${stageCfg.markerPx}px` }}
                       className="rounded-full border-2 border-white flex items-center justify-center pointer-events-none shadow-md">
                       <span className="text-white font-bold" style={{ fontSize: `${Math.max(6, stageCfg.markerPx * 0.35)}px` }}>{i + 1}</span>
                     </div>
@@ -610,7 +612,7 @@ The image will show the EXISTING stage with these ${ctx.fixture} fixtures compos
               className="w-full text-xs p-2.5 border border-gray-200 rounded-md bg-gray-50 resize-none h-14 focus:outline-none focus:border-green-400" />
           </div>
 
-          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage}
+          <button onClick={generatePrompts} disabled={isGenerating || !uploadedImage || (shotType === 'front' && !lightType) || markers.length === 0}
             className="w-full py-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
             {isGenerating
               ? <><Loader2 size={15} className="animate-spin" /> 3개 AI 프롬프트 생성 중...</>

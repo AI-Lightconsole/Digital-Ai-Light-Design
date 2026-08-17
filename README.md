@@ -1,73 +1,31 @@
-# React + TypeScript + Vite
+# AI 디지털 조명 생성 V3.4
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+핵심 수정
+- 2D 마커를 장비 중심이 아닌 설치 접점/체결점으로 해석
+- 바닥·오브젝트 상단·오브젝트 전면·트러스·바튼 설치 규칙 분리
+- 측면 결과에서 정면 원본을 완전히 제외한 독립 16:9 오른쪽 패널 생성
+- 물리 조명기 복제 없이 색상·광선·헤이즈·라인 조명·바닥 반사로 조명 연계
+- 센터보다 단순하고 약간 어두운 측면 디자인 유지
+- 좌우 대칭 중복 버그 수정
+- 동일 장비 + 동일 좌표 중복 생성 차단
+- 프롬프트 생성 직전 중복 자동 제거
+- 화면 총 장비 수와 프롬프트 Total fixtures 일치
+- ONE POSITION = EXACTLY ONE FIXTURE 규칙 강화
+- AUTO 원근 / Stage Lock / Position Map 유지
+- ChatGPT / Gemini 전용 프롬프트 분리
+- 정면 / 측면 모드 유지
+- Ctrl+V 이미지 자동 붙여넣기
+- 장비 카드에는 BEAM/WASH/SPOT/TUBE/BLINDER만 표시
+- 원본 이미지 화면비에 맞춰 Stage Plot을 자동 조정하여 비정형 화면비에서도 좌표 오차 방지
+- 실행취소가 추가·이동·대칭·크기 변경·삭제·초기화 작업을 단계별로 복원
+- 정면/측면 모드 전환 시 그리드와 버튼 레이아웃 유지
 
-Currently, two official plugins are available:
+배포
+- `index.html` 중심의 정적 웹앱이며 기존 Vite Vercel 프로젝트와의 호환 설정 포함
+- GitHub 저장소 루트에 업로드 후 Vercel Framework Preset을 `Other`로 배포 가능
+- 별도 빌드 명령이나 서버 런타임 불필요
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+좌우 대칭 동작
+- 현재 Plot 전체를 기준으로 반대편에 없는 장비만 생성
+- 이미 동일 타입/설치방식/대칭 좌표가 존재하면 추가하지 않음
+- 여러 번 눌러도 수량이 폭증하지 않음

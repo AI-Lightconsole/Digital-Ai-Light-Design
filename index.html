@@ -311,29 +311,34 @@ function frontPrompt(ai){
 function sidePrompt(ai){
   if(!state.image)return "";
   if(ai==="chatgpt") return [
-    "CREATE ONE COMPLETELY NEW RIGHT-SIDE EXTENSION PANEL FROM THE UPLOADED FRONT-STAGE REFERENCE.",
-    "The uploaded image is REFERENCE ONLY. Output only the new standalone side panel; do not include even a small portion of the source image.",
-    "The entire panel, including its left edge, must contain only newly generated continuation space. No cropped truss, fixture, stairs, portal, screen, LED frame, or source-edge fragment may appear anywhere.",
+    "CREATE ONE COMPLETELY NEW RIGHT-SIDE EXTENSION PANEL FROM THE UPLOADED CENTER-STAGE REFERENCE.",
+    "CORE HIERARCHY: THE CENTER STAGE IS THE HERO. The side panel is supporting visual space only and must never compete with, repeat, or replace the center focal point.",
+    "The uploaded image is REFERENCE ONLY. Analyze its visual identity, then output only one new standalone side panel. Do not include, paste, or crop even a small portion of the source image.",
     "This is NOT a side-angle view. Keep the same fixed frontal camera, eye level, lens perspective, horizon, and vanishing geometry.",
-    "The LEFT edge of this panel will be placed directly against the RIGHT edge of the original. Continue floor, wall, and ceiling geometry seamlessly from that join.",
-    "Continue the LIGHTING DESIGN without copying physical fixtures: match the source color palette, light direction, intensity balance, haze glow, illuminated lines, soft beam spill, and floor reflections.",
-    "Use only subtle integrated architectural light, reflected light, and atmospheric glow. Do not show moving heads, PARs, blinders, trusses, stands, clamps, or any visible lighting equipment.",
-    "Keep the side visually connected but simpler and less bright than the center stage, with no second stage or focal point.",
+    "The LEFT edge of this panel will be placed directly against the RIGHT edge of the original. Make the seam natural by continuing the appropriate floor level, horizon, depth, color, light spill, haze, and reflections.",
+    "Create a side image that feels designed together with the center. Match its color palette, lighting quality, beam language, material, atmosphere, haze, depth, line rhythm, and floor reflections.",
+    "Do not mechanically copy the center architecture. You MAY echo compatible shapes, lines, textures, beams, glow, particles, or environmental motifs in a simplified supporting form when that makes the full LED WALL composition coherent.",
+    "Preserve the center's visual dominance. Adjust side contrast, scale, detail, and structural emphasis only as needed so attention naturally returns to the center.",
+    "Fill the side with an intentional finished design, not empty filler. It should enrich the overall mood while remaining non-focal.",
+    "Do not create a second center stage, hero portal, main screen, product pedestal, title area, or dominant symmetrical centerpiece.",
+    "Do not show moving heads, PARs, blinders, trusses, stands, clamps, or other visible physical lighting equipment unless such equipment is clearly part of the source's established visual world.",
     "No people, logos, text, products, furniture, props, or unrelated objects.",
-    "Generate one complete standalone 16:9 RIGHT-SIDE PANEL ready to place immediately to the right of the original image in After Effects.",
+    "Preserve the uploaded reference image's exact pixel dimensions and aspect ratio for the new panel. Generate one complete standalone RIGHT-SIDE PANEL ready to place immediately to the right of the original in After Effects.",
     "Generate the image, not an explanation."
   ].join("\n");
   return [
-    "첨부된 정면 무대 이미지는 참고용으로만 분석하고, 완전히 독립된 LED WALL용 오른쪽 측면 패널 1장을 새로 생성해줘.",
-    "결과에는 정면 원본 이미지의 어떤 부분도 보이면 안 돼. 왼쪽 경계를 포함한 전체 화면에는 새로 생성된 확장 공간만 보여줘.",
-    "잘린 트러스, 조명 장비, 계단, 포털, 스크린, LED 프레임 또는 원본 끝부분 구조가 화면 어디에도 나타나면 안 돼.",
+    "첨부된 센터 무대 이미지를 참고해서 LED WALL용 오른쪽 측면 패널 1장을 새로 생성해줘.",
+    "가장 중요한 구성 원칙은 센터가 주인공이라는 것이야. 측면은 센터와 경쟁하거나 센터를 반복하는 무대가 아니라 센터의 분위기를 완성하는 보조 이미지여야 해.",
+    "원본은 시각적 정체성을 분석하는 참고 이미지일 뿐이야. 결과에는 원본의 어떤 부분도 붙여 넣거나 잘라서 포함하지 말고 새로 생성된 측면 이미지만 보여줘.",
     "측면 앵글로 바꾸지 말고 원본과 동일한 고정 정면 카메라, 아이레벨, 렌즈 원근, 수평선과 소실 구조를 유지해줘.",
-    "생성 이미지의 왼쪽 경계가 원본 오른쪽 경계에 바로 붙는 접합선이야. 바닥, 벽, 천장 구조가 그 지점부터 자연스럽게 이어져야 해.",
-    "실제 조명 장비는 복제하지 말고 조명 디자인만 연결해줘. 원본의 컬러 팔레트, 광선 방향, 명암 비율, 헤이즈 글로우, 라인 조명, 부드러운 빛 번짐과 바닥 반사를 이어줘.",
-    "건축에 통합된 은은한 라인 조명, 반사광과 공간광만 사용하고 무빙라이트, PAR, 블라인더, 트러스, 스탠드, 클램프 등 실제 조명 장비는 보이지 않게 해줘.",
-    "센터와 연결감은 유지하되 밝기와 구조는 더 단순하게 하고 새로운 무대나 포컬 포인트는 만들지 마.",
+    "생성 이미지의 왼쪽 경계가 원본 오른쪽 경계에 바로 붙는 접합선이야. 바닥 높이, 수평선, 깊이, 색, 빛 번짐, 헤이즈와 반사 중 필요한 요소를 자연스럽게 이어줘.",
+    "센터와 처음부터 함께 디자인한 것처럼 컬러 팔레트, 광질, 빔의 언어, 재질, 분위기, 헤이즈, 깊이, 라인의 리듬과 바닥 반사를 맞춰줘.",
+    "센터 구조를 기계적으로 복제하지 마. 다만 전체 LED WALL 구성이 자연스러워진다면 센터의 형태, 라인, 텍스처, 빔, 글로우, 입자 또는 환경 모티프를 측면용 보조 요소로 단순화해서 사용할 수 있어.",
+    "시선은 항상 센터로 돌아와야 해. 필요한 만큼 측면의 대비, 크기, 디테일과 구조적 강조를 조절하되 단순한 빈 공간이나 의미 없는 배경으로 만들지는 마.",
+    "두 번째 센터 무대, 대형 포털, 메인 스크린, 상품 받침대, 타이틀 영역 또는 강한 중앙 포컬 구조를 새로 만들지 마.",
+    "원본의 세계에 실제 조명 장비가 명확히 포함된 경우가 아니라면 무빙라이트, PAR, 블라인더, 트러스, 스탠드, 클램프 같은 물리 장비는 보이지 않게 해줘.",
     "사람, 로고, 텍스트, 상품, 가구, 소품 또는 관련 없는 오브젝트를 추가하지 마.",
-    "AE에서 원본 오른쪽에 즉시 붙여 사용할 수 있는 완전히 독립된 16:9 오른쪽 측면 패널 한 장만 생성해줘.",
+    "원본과 정확히 동일한 픽셀 크기와 화면비로 만들고, AE에서 원본 오른쪽에 즉시 붙일 수 있는 독립된 오른쪽 측면 패널 한 장만 생성해줘.",
     "설명 말고 결과 이미지를 생성해줘."
   ].join("\n");
 }
@@ -438,11 +443,12 @@ function setAI(ai){
 document.querySelectorAll(".aiTab").forEach(t=>t.onclick=()=>setAI(t.dataset.ai));
 $("copyBtn").onclick=async()=>{if(!$("promptBox").value)return;await navigator.clipboard.writeText($("promptBox").value);$("copyBtn").textContent="복사 완료";setTimeout(()=>$("copyBtn").textContent="프롬프트 복사",900)};
 
-function savePositionMap(){
+function buildPositionMapDataUrl(){
   sanitizeMarkers();
-  if(!state.image)return alert("먼저 무대 이미지를 업로드하세요.");
-  const c=document.createElement("canvas");c.width=state.w;c.height=state.h;const ctx=c.getContext("2d"),im2=new Image();
-  im2.onload=()=>{
+  if(!state.image)return Promise.reject(new Error("먼저 무대 이미지를 업로드하세요."));
+  return new Promise((resolve,reject)=>{
+    const c=document.createElement("canvas");c.width=state.w;c.height=state.h;const ctx=c.getContext("2d"),im2=new Image();
+    im2.onload=()=>{
     ctx.drawImage(im2,0,0,c.width,c.height);
     const colors={beam:"#37b26c",wash:"#5b8def",spot:"#8b5cf6",tube:"#94a3b8",blinder:"#f59e0b"};
     state.markers.forEach((m,i)=>{
@@ -450,13 +456,55 @@ function savePositionMap(){
       ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=colors[m.type];ctx.fill();ctx.lineWidth=Math.max(2,c.width*.002);ctx.strokeStyle="#fff";ctx.stroke();
       ctx.fillStyle="#fff";ctx.font=`bold ${Math.round(r*.75)}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(fixtureDefs[m.type].short,x,y);
     });
-    const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download="fixture-position-map.png";a.click();
-  };
-  im2.src=state.image;
+      resolve(c.toDataURL("image/png"));
+    };
+    im2.onerror=()=>reject(new Error("Position Map을 만들지 못했습니다."));
+    im2.src=state.image;
+  });
+}
+async function savePositionMap(){
+  try{
+    const dataUrl=await buildPositionMapDataUrl();
+    const a=document.createElement("a");a.href=dataUrl;a.download="fixture-position-map.png";a.click();
+  }catch(err){alert(err.message)}
 }
 $("positionBtn").onclick=savePositionMap;
-$("chatgptBtn").onclick=async()=>{setAI("chatgpt");if($("promptBox").value)await navigator.clipboard.writeText($("promptBox").value);window.open("https://chatgpt.com/","_blank")};
-$("geminiBtn").onclick=async()=>{setAI("gemini");if($("promptBox").value)await navigator.clipboard.writeText($("promptBox").value);window.open("https://gemini.google.com/","_blank")};
+async function blobUrlToDataUrl(url){
+  const blob=await (await fetch(url)).blob();
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);
+  });
+}
+async function sendToAI(ai){
+  setAI(ai);
+  const prompt=$("promptBox").value;
+  if(!state.image)return alert("먼저 무대 이미지를 업로드하세요.");
+  if(!prompt)return alert(state.mode==="front"?"먼저 장비 위치를 지정하세요.":"프롬프트를 확인하세요.");
+  const button=$(ai==="chatgpt"?"chatgptBtn":"geminiBtn"),originalLabel=button.textContent;
+  const url=ai==="chatgpt"?"https://chatgpt.com/":"https://gemini.google.com/";
+  button.disabled=true;button.textContent="이미지 준비 중…";
+  try{
+    const originalImage=await blobUrlToDataUrl(state.image);
+    const images=[{dataUrl:originalImage,name:state.imageName||"stage-reference.png"}];
+    if(state.mode==="front")images.push({dataUrl:await buildPositionMapDataUrl(),name:"fixture-position-map.png"});
+    if(document.documentElement.getAttribute("data-dlc-extension")==="true"){
+      window.dispatchEvent(new CustomEvent("extension:openAIPrompt",{detail:{ai,prompt,url,images,mode:state.mode}}));
+      button.textContent=state.mode==="front"?"원본·맵·프롬프트 전달 완료":"원본·프롬프트 전달 완료";
+      setTimeout(()=>{button.textContent=originalLabel;button.disabled=false},1800);
+      return;
+    }
+    await navigator.clipboard.writeText(prompt);
+    window.open(url,"_blank");
+    alert("익스텐션이 연결되지 않아 프롬프트만 복사했습니다. 이미지는 직접 첨부해 주세요.");
+  }catch(err){
+    alert(`전달 준비 중 오류가 발생했습니다: ${err.message}`);
+  }finally{
+    if(button.disabled&&button.textContent==="이미지 준비 중…"){button.textContent=originalLabel;button.disabled=false}
+  }
+}
+$("chatgptBtn").onclick=()=>sendToAI("chatgpt");
+$("geminiBtn").onclick=()=>sendToAI("gemini");
 
 setMode("front");render();
 </script>

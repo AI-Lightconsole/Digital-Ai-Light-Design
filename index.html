@@ -76,7 +76,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚡</div><div>AI 디지털 조명 생성</div></div>
+  <div class="brand"><div class="logo">⚡</div><div>AI 디지털 조명 생성 <span style="font-size:11px;color:#16a765;font-weight:800">V3.8</span></div></div>
   <div class="modebar">
     <button class="modebtn active" id="frontMode">정면</button>
     <button class="modebtn" id="sideMode">측면</button>
@@ -159,7 +159,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;
 
 <section class="right">
   <h3>AI 이미지 생성</h3>
-  <div class="statusBox" id="sendInfo"><b>정면 Fixture 생성</b><br>ChatGPT는 원본+단순 위치점, Gemini는 원본+텍스트 좌표를 사용합니다.</div>
+  <div class="statusBox" id="sendInfo"><b>정면 Fixture 생성</b><br>Gemini는 원본+색상 위치점+선택 장비 외형 참고 이미지를 사용합니다.</div>
 
   <div class="aiTabs">
     <button class="aiTab active" data-ai="chatgpt">ChatGPT</button>
@@ -176,7 +176,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;
   <button class="btn primary" id="chatgptBtn" style="width:100%;margin-top:8px">ChatGPT에서 생성</button>
   <button class="btn gemini" id="geminiBtn" style="width:100%;margin-top:8px">Gemini에서 생성</button>
 
-  <p class="hint" style="margin-top:10px">익스텐션 연결 시 원본 이미지와 AI별 전용 프롬프트를 자동 전달합니다. Gemini에는 위치도 이미지를 보내지 않습니다.</p>
+  <p class="hint" style="margin-top:10px">익스텐션 연결 시 원본·글자 없는 위치 가이드·선택 장비 외형·전용 프롬프트를 자동 전달합니다.</p>
 </section>
 </div>
 
@@ -287,7 +287,7 @@ function frontPrompt(ai){
   } else {
     L.push("이 작업은 새 이미지 생성이나 무대 재디자인이 아니라, 원본 사진 위에 지정된 조명 장비 본체만 추가하는 제한적 합성 편집이야.");
     L.push("Image 1이 유일한 원본이야. 새로 추가되는 장비 본체 영역을 제외한 모든 픽셀과 시각 요소를 원본과 동일하게 유지해줘.");
-    L.push("위치 정보와 X/Y 좌표는 내부 배치 지시 데이터일 뿐이야. 최종 이미지에는 좌표, 숫자, 문자, 라벨, 아이콘, 원, 점, 마커, 가이드, UI를 절대 표시하지 마.");
+    L.push("첨부된 위치 정보는 내부 배치 지시 데이터일 뿐이야. 최종 이미지에는 숫자, 문자, 라벨, 아이콘, 원, 점, 마커, 가이드, UI를 절대 표시하지 마.");
     L.push("");
     L.push("절대 편집 범위:");
     L.push("- 아래 목록의 물리적인 조명 장비 본체와 장비가 자연스럽게 놓이기 위한 최소한의 접촉 그림자 또는 체결 가림만 추가할 것.");
@@ -303,14 +303,24 @@ function frontPrompt(ai){
     L.push("- 기존 무대 구조, 천장, 바닥, 트러스, 기존 장비, LED WALL, 카메라 시점, 원근, 컬러, 노출, 조명 분위기는 변경 금지.");
     L.push("");
     L.push("각 위치에서 무대 크기와 원근을 분석해 실제 프로 조명 장비의 물리적 크기에 맞게 자동 스케일링해줘. 가까운 장비는 자연스럽게 크게, 먼 장비는 작게 보여야 해.");
-    L.push("X/Y 좌표는 장비 중심이 아니라 설치 방식에 따른 정확한 접점 또는 체결점이야. 원본 이미지의 해상도, 화면비, 프레이밍과 크롭을 그대로 유지해줘.");
+    L.push("가이드 위치는 장비 중심이 아니라 설치 방식에 따른 접점 또는 체결점이야. 원본 이미지의 해상도, 화면비, 프레이밍과 크롭을 그대로 유지해줘.");
   }
   L.push("");
-  state.markers.forEach((m,i)=>{
-    const sizeHint=m.size==="auto"?"AUTO":m.size==="small"?"slightly smaller than automatic":"slightly larger than automatic";
-    const mount=mountDefs[m.mount]||mountDefs.floor;
-    L.push(`${i+1}. ${fixtureDefs[m.type].label} | ${fixtureDefs[m.type].desc} | X ${m.x.toFixed(1)}% | Y ${m.y.toFixed(1)}% | mount ${mount.label} | size ${sizeHint} | placement ${mount.instruction}`);
-  });
+  if(ai==="chatgpt"){
+    state.markers.forEach((m,i)=>{
+      const sizeHint=m.size==="auto"?"AUTO":m.size==="small"?"slightly smaller than automatic":"slightly larger than automatic";
+      const mount=mountDefs[m.mount]||mountDefs.floor;
+      L.push(`${i+1}. ${fixtureDefs[m.type].label} | ${fixtureDefs[m.type].desc} | X ${m.x.toFixed(1)}% | Y ${m.y.toFixed(1)}% | mount ${mount.label} | size ${sizeHint} | placement ${mount.instruction}`);
+    });
+  }else{
+    const guideColors={beam:"green",wash:"blue",spot:"purple",tube:"gray",blinder:"orange"};
+    const typeOrder=[...new Set(state.markers.map(m=>m.type))];
+    L.push("Image 2는 Image 1과 화면비와 좌표계가 같은 투명 위치 가이드야. Image 2의 작은 색상점 각각을 정확히 장비 1대로 완전히 교체하고, 모든 색상점은 결과에서 완전히 제거해.");
+    L.push("색상점 장비 종류: "+typeOrder.map(t=>`${guideColors[t]} 점 = ${fixtureDefs[t].label}`).join(" | ")+".");
+    L.push("장비 외형 참고 이미지: "+typeOrder.map((t,i)=>`Image ${i+3} = ${fixtureDefs[t].label}`).join(" | ")+".");
+    L.push("각 장비는 해당 외형 참고 이미지의 렌즈 수, 렌즈 배열, 헤드 실루엣, 요크, 베이스, 하우징 비율을 정확히 유지해. 참고 이미지의 픽셀을 평면 스티커처럼 붙이지 말고, 무대 원근과 설치면에 맞는 사실적인 3D 조명 장비로 재구성해.");
+    L.push("점의 위치와 주변 무대 표면을 보고 바닥형·상부 체결형·전면 부착형 방향을 자연스럽게 결정해. 가이드 점 이외의 위치에는 아무것도 추가하지 마.");
+  }
   L.push("");
   if(ai==="chatgpt"){
     L.push(`Total fixtures: ${state.markers.length}. This number is authoritative. Generate exactly ${state.markers.length} added fixtures, no more and no fewer.`);
@@ -319,7 +329,7 @@ function frontPrompt(ai){
     L.push("Generate the edited result image, not an analysis.");
   } else {
     L.push(`총 추가 장비 수: ${state.markers.length}대. 이 수량이 최종 기준이며 정확히 ${state.markers.length}대만 추가해줘.`);
-    L.push("최종 결과에는 문자, 숫자, X/Y 좌표, 라벨, 마커, 점, 원, 위치도 그래픽이 하나도 보이면 안 돼.");
+    L.push("최종 결과에는 문자, 숫자, 라벨, 마커, 점, 원, 위치도 그래픽이 하나도 보이면 안 돼.");
     L.push("분석 설명 말고 편집된 결과 이미지를 생성해줘.");
   }
   return L.join("\n");
@@ -444,7 +454,7 @@ function setMode(mode){
   document.querySelectorAll(".sideOnly").forEach(x=>x.classList.toggle("is-hidden",mode!=="side"));
   $("plotTitle").textContent=mode==="front"?"STAGE PLOT":"SIDE EXTENSION";
   $("plotHelp").textContent=mode==="front"?"· 클릭 = 추가 / 드래그 = 이동":"· 정면 원본 참고";
-  $("sendInfo").innerHTML=mode==="front"?"<b>정면 Fixture 생성</b><br>ChatGPT는 원본+단순 위치점, Gemini는 원본+텍스트 좌표를 사용합니다.":"<b>오른쪽 측면 패널 생성</b><br>정면 원본은 참고용이며 결과에는 포함되지 않습니다.";
+  $("sendInfo").innerHTML=mode==="front"?"<b>정면 Fixture 생성</b><br>Gemini는 원본+색상 위치점+선택 장비 외형 참고 이미지를 사용합니다.":"<b>오른쪽 측면 패널 생성</b><br>정면 원본은 참고용이며 결과에는 포함되지 않습니다.";
   $("chatgptBtn").textContent=mode==="front"?"ChatGPT에서 생성":"ChatGPT 측면 생성";
   $("geminiBtn").textContent=mode==="front"?"Gemini에서 생성":"Gemini 측면 생성";
   $("quickEdit").style.display="none";state.selectedId=null;updatePrompt();
@@ -462,19 +472,23 @@ $("copyBtn").onclick=async()=>{if(!$("promptBox").value)return;await navigator.c
 function buildPositionMapDataUrl(){
   sanitizeMarkers();
   if(!state.image)return Promise.reject(new Error("먼저 무대 이미지를 업로드하세요."));
-  return new Promise((resolve,reject)=>{
-    const c=document.createElement("canvas");c.width=state.w;c.height=state.h;const ctx=c.getContext("2d"),im2=new Image();
-    im2.onload=()=>{
-    ctx.drawImage(im2,0,0,c.width,c.height);
+  return new Promise(resolve=>{
+    const c=document.createElement("canvas");c.width=state.w;c.height=state.h;const ctx=c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
     const colors={beam:"#00e676",wash:"#2979ff",spot:"#d500f9",tube:"#90a4ae",blinder:"#ffab00"};
     state.markers.forEach(m=>{
-      const x=c.width*m.x/100,y=c.height*m.y/100,r=Math.max(4,Math.min(9,c.width*.004));
+      const x=c.width*m.x/100,y=c.height*m.y/100,r=Math.max(5,Math.min(10,c.width*.0045));
       ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=colors[m.type];ctx.fill();
     });
-      resolve(c.toDataURL("image/png"));
-    };
-    im2.onerror=()=>reject(new Error("Position Map을 만들지 못했습니다."));
-    im2.src=state.image;
+    resolve(c.toDataURL("image/png"));
+  });
+}
+
+function getFixtureReferenceImages(){
+  const typeOrder=[...new Set(state.markers.map(m=>m.type))];
+  return typeOrder.map(type=>{
+    const img=document.querySelector(`.fixture[data-type="${type}"] img`);
+    return {dataUrl:img.src,name:`fixture-reference-${type}.png`};
   });
 }
 async function savePositionMap(){
@@ -532,6 +546,10 @@ $("geminiBtn").onclick=async()=>{
     const originalImage=await blobUrlToDataUrl(state.image);
     const images=[{dataUrl:originalImage,name:state.imageName||"stage-reference.png"}];
     if(document.documentElement.getAttribute("data-dlc-extension")==="true"){
+      if(state.mode==="front"){
+        images.push({dataUrl:await buildPositionMapDataUrl(),name:"non-renderable-position-guide.png"});
+        images.push(...getFixtureReferenceImages());
+      }
       window.dispatchEvent(new CustomEvent("extension:openAIPrompt",{detail:{
         ai:"gemini",prompt,url:"https://gemini.google.com/",images,mode:state.mode
       }}));

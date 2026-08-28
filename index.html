@@ -159,7 +159,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;
 
 <section class="right">
   <h3>AI 이미지 생성</h3>
-  <div class="statusBox" id="sendInfo"><b>정면 Fixture 생성</b><br>원본 무대 + Position Map + AI별 전용 지시문을 사용합니다.</div>
+  <div class="statusBox" id="sendInfo"><b>정면 Fixture 생성</b><br>ChatGPT는 원본+단순 위치점, Gemini는 원본+텍스트 좌표를 사용합니다.</div>
 
   <div class="aiTabs">
     <button class="aiTab active" data-ai="chatgpt">ChatGPT</button>
@@ -176,7 +176,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;
   <button class="btn primary" id="chatgptBtn" style="width:100%;margin-top:8px">ChatGPT에서 생성</button>
   <button class="btn gemini" id="geminiBtn" style="width:100%;margin-top:8px">Gemini에서 생성</button>
 
-  <p class="hint" style="margin-top:10px">기존 익스텐션과 연결하면 원본 이미지 + Position Map + 선택한 AI 전용 프롬프트를 자동 첨부하는 구조로 사용할 수 있습니다.</p>
+  <p class="hint" style="margin-top:10px">익스텐션 연결 시 원본 이미지와 AI별 전용 프롬프트를 자동 전달합니다. Gemini에는 위치도 이미지를 보내지 않습니다.</p>
 </section>
 </div>
 
@@ -260,8 +260,15 @@ function frontPrompt(ai){
   const L=[];
   if(ai==="chatgpt"){
     L.push("EDIT THE UPLOADED STAGE IMAGE. STAGE LOCK = ON.");
-    L.push("Image 1 is the original source stage and must remain visually unchanged except for the added lighting fixtures.");
-    L.push("If Image 2 is provided, it is ONLY a position reference map. Never reproduce its circles, letters, markers, labels, or guides.");
+    L.push("THIS IS A RESTRICTED COMPOSITING EDIT, NOT IMAGE GENERATION OR A STAGE REDESIGN.");
+    L.push("Image 1 is the authoritative original source. Keep every pixel outside the newly added fixture bodies visually unchanged.");
+    L.push("If Image 2 is provided, it is non-renderable spatial metadata only. Never copy, trace, or reproduce any dot, color, marker, label, guide, shape, or other visual feature from Image 2.");
+    L.push("");
+    L.push("ABSOLUTE EDIT BOUNDARY:");
+    L.push("- Add ONLY the physical lighting fixture bodies listed below, plus the minimum natural contact shadow or mounting occlusion required to seat each fixture realistically.");
+    L.push("- Do NOT generate or alter anything else: no beams, light rays, glow, haze, fog, gobo patterns, reflections, illuminated lines, trusses, cables, clamps, stands, scenery, architecture, LED graphics, decorations, props, people, text, numbers, coordinates, labels, icons, circles, dots, or UI elements.");
+    L.push("- Do NOT relight, recolor, enhance, clean up, extend, crop, reframe, or regenerate the source stage.");
+    L.push("- Existing stage lighting and all existing objects must remain exactly as they appear in Image 1.");
     L.push("");
     L.push("CRITICAL PLACEMENT RULES:");
     L.push("- ONE POSITION = EXACTLY ONE FIXTURE.");
@@ -270,7 +277,7 @@ function frontPrompt(ai){
     L.push("- Do not fill gaps between markers and do not invent repeated patterns.");
     L.push("- Do not add any lighting fixture at an unmarked position.");
     L.push("");
-    L.push("Preserve the original stage background, LED walls, architecture, floor, camera viewpoint, perspective, composition, and lighting mood. Do not redesign the stage.");
+    L.push("Preserve the original stage background, LED walls, architecture, floor, ceiling, trusses, existing fixtures, camera viewpoint, perspective, composition, color, exposure, and lighting mood. Do not redesign the stage.");
     L.push("Composite ONLY the fixtures listed below at the specified normalized image coordinates.");
     L.push("Analyze the stage scale, floor perspective, camera distance, vanishing direction, and the real-world proportions of professional lighting fixtures. Determine physically plausible fixture size automatically for every position.");
     L.push("Do not use a fixed pixel size or fixed percentage scale. Farther fixtures must naturally appear smaller and nearer fixtures larger.");
@@ -278,15 +285,22 @@ function frontPrompt(ai){
     L.push("The X/Y coordinate is NOT the fixture center. It is the exact contact or attachment point defined by the mount type.");
     L.push("Preserve the source image dimensions, aspect ratio, framing, and crop exactly.");
   } else {
-    L.push("첨부된 무대 이미지를 편집해서 새 이미지를 생성해줘. 기존 무대는 그대로 유지하고 지정된 위치에만 조명 장비를 합성해줘.");
-    L.push("Image 1은 원본 무대이고, Image 2가 있다면 위치 참고용 맵일 뿐이야. Image 2의 원, 문자, 라벨, 가이드는 결과에 절대 재현하지 마.");
+    L.push("이 작업은 새 이미지 생성이나 무대 재디자인이 아니라, 원본 사진 위에 지정된 조명 장비 본체만 추가하는 제한적 합성 편집이야.");
+    L.push("Image 1이 유일한 원본이야. 새로 추가되는 장비 본체 영역을 제외한 모든 픽셀과 시각 요소를 원본과 동일하게 유지해줘.");
+    L.push("위치 정보와 X/Y 좌표는 내부 배치 지시 데이터일 뿐이야. 최종 이미지에는 좌표, 숫자, 문자, 라벨, 아이콘, 원, 점, 마커, 가이드, UI를 절대 표시하지 마.");
+    L.push("");
+    L.push("절대 편집 범위:");
+    L.push("- 아래 목록의 물리적인 조명 장비 본체와 장비가 자연스럽게 놓이기 위한 최소한의 접촉 그림자 또는 체결 가림만 추가할 것.");
+    L.push("- 빔, 광선, 발광, 헤이즈, 안개, 고보, 반사, 라인 조명, 트러스, 케이블, 클램프, 스탠드, 무대 구조, LED 그래픽, 장식, 소품, 사람을 새로 만들지 말 것.");
+    L.push("- 원본을 다시 그리거나 재조명·재채색·보정·확장·크롭·재구성하지 말 것.");
+    L.push("- 원본에 이미 존재하는 조명과 모든 물체는 그대로 유지할 것.");
     L.push("");
     L.push("가장 중요한 규칙:");
     L.push("- 위치 1개당 장비는 정확히 1대만 생성.");
     L.push("- 동일 좌표에 장비를 중복 생성하지 말 것.");
     L.push("- 마커를 장비 그룹/행/클러스터로 해석하지 말 것.");
     L.push("- 마커 사이를 임의로 채우지 말고, 표시되지 않은 곳에 장비를 추가하지 말 것.");
-    L.push("- 기존 무대 구조, 바닥, LED WALL, 카메라 시점, 원근, 조명 분위기는 유지.");
+    L.push("- 기존 무대 구조, 천장, 바닥, 트러스, 기존 장비, LED WALL, 카메라 시점, 원근, 컬러, 노출, 조명 분위기는 변경 금지.");
     L.push("");
     L.push("각 위치에서 무대 크기와 원근을 분석해 실제 프로 조명 장비의 물리적 크기에 맞게 자동 스케일링해줘. 가까운 장비는 자연스럽게 크게, 먼 장비는 작게 보여야 해.");
     L.push("X/Y 좌표는 장비 중심이 아니라 설치 방식에 따른 정확한 접점 또는 체결점이야. 원본 이미지의 해상도, 화면비, 프레이밍과 크롭을 그대로 유지해줘.");
@@ -301,9 +315,11 @@ function frontPrompt(ai){
   if(ai==="chatgpt"){
     L.push(`Total fixtures: ${state.markers.length}. This number is authoritative. Generate exactly ${state.markers.length} added fixtures, no more and no fewer.`);
     L.push("Do not add extra fixtures. Do not move existing stage structures. Do not invent trusses unless a fixture is explicitly truss-mounted.");
+    L.push("FINAL OUTPUT MUST CONTAIN NO VISIBLE TEXT, NUMBERS, COORDINATES, LABELS, MARKERS, DOTS, CIRCLES, OR POSITION-MAP GRAPHICS.");
     L.push("Generate the edited result image, not an analysis.");
   } else {
     L.push(`총 추가 장비 수: ${state.markers.length}대. 이 수량이 최종 기준이며 정확히 ${state.markers.length}대만 추가해줘.`);
+    L.push("최종 결과에는 문자, 숫자, X/Y 좌표, 라벨, 마커, 점, 원, 위치도 그래픽이 하나도 보이면 안 돼.");
     L.push("분석 설명 말고 편집된 결과 이미지를 생성해줘.");
   }
   return L.join("\n");
@@ -428,7 +444,7 @@ function setMode(mode){
   document.querySelectorAll(".sideOnly").forEach(x=>x.classList.toggle("is-hidden",mode!=="side"));
   $("plotTitle").textContent=mode==="front"?"STAGE PLOT":"SIDE EXTENSION";
   $("plotHelp").textContent=mode==="front"?"· 클릭 = 추가 / 드래그 = 이동":"· 정면 원본 참고";
-  $("sendInfo").innerHTML=mode==="front"?"<b>정면 Fixture 생성</b><br>원본 무대 + Position Map + AI별 전용 지시문을 사용합니다.":"<b>오른쪽 측면 패널 생성</b><br>정면 원본은 참고용이며 결과에는 포함되지 않습니다.";
+  $("sendInfo").innerHTML=mode==="front"?"<b>정면 Fixture 생성</b><br>ChatGPT는 원본+단순 위치점, Gemini는 원본+텍스트 좌표를 사용합니다.":"<b>오른쪽 측면 패널 생성</b><br>정면 원본은 참고용이며 결과에는 포함되지 않습니다.";
   $("chatgptBtn").textContent=mode==="front"?"ChatGPT에서 생성":"ChatGPT 측면 생성";
   $("geminiBtn").textContent=mode==="front"?"Gemini에서 생성":"Gemini 측면 생성";
   $("quickEdit").style.display="none";state.selectedId=null;updatePrompt();
@@ -450,11 +466,10 @@ function buildPositionMapDataUrl(){
     const c=document.createElement("canvas");c.width=state.w;c.height=state.h;const ctx=c.getContext("2d"),im2=new Image();
     im2.onload=()=>{
     ctx.drawImage(im2,0,0,c.width,c.height);
-    const colors={beam:"#37b26c",wash:"#5b8def",spot:"#8b5cf6",tube:"#94a3b8",blinder:"#f59e0b"};
-    state.markers.forEach((m,i)=>{
-      const x=c.width*m.x/100,y=c.height*m.y/100,r=Math.max(14,c.width*.010);
-      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=colors[m.type];ctx.fill();ctx.lineWidth=Math.max(2,c.width*.002);ctx.strokeStyle="#fff";ctx.stroke();
-      ctx.fillStyle="#fff";ctx.font=`bold ${Math.round(r*.75)}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(fixtureDefs[m.type].short,x,y);
+    const colors={beam:"#00e676",wash:"#2979ff",spot:"#d500f9",tube:"#90a4ae",blinder:"#ffab00"};
+    state.markers.forEach(m=>{
+      const x=c.width*m.x/100,y=c.height*m.y/100,r=Math.max(4,Math.min(9,c.width*.004));
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=colors[m.type];ctx.fill();
     });
       resolve(c.toDataURL("image/png"));
     };
@@ -476,35 +491,63 @@ async function blobUrlToDataUrl(url){
     reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);
   });
 }
-async function sendToAI(ai){
-  setAI(ai);
+$("chatgptBtn").onclick=async()=>{
+  setAI("chatgpt");
   const prompt=$("promptBox").value;
   if(!state.image)return alert("먼저 무대 이미지를 업로드하세요.");
   if(!prompt)return alert(state.mode==="front"?"먼저 장비 위치를 지정하세요.":"프롬프트를 확인하세요.");
-  const button=$(ai==="chatgpt"?"chatgptBtn":"geminiBtn"),originalLabel=button.textContent;
-  const url=ai==="chatgpt"?"https://chatgpt.com/":"https://gemini.google.com/";
+  const button=$("chatgptBtn"),originalLabel=button.textContent;
   button.disabled=true;button.textContent="이미지 준비 중…";
   try{
     const originalImage=await blobUrlToDataUrl(state.image);
     const images=[{dataUrl:originalImage,name:state.imageName||"stage-reference.png"}];
-    if(state.mode==="front")images.push({dataUrl:await buildPositionMapDataUrl(),name:"fixture-position-map.png"});
+    if(state.mode==="front"){
+      images.push({dataUrl:await buildPositionMapDataUrl(),name:"fixture-position-map.png"});
+    }
     if(document.documentElement.getAttribute("data-dlc-extension")==="true"){
-      window.dispatchEvent(new CustomEvent("extension:openAIPrompt",{detail:{ai,prompt,url,images,mode:state.mode}}));
+      window.dispatchEvent(new CustomEvent("extension:openAIPrompt",{detail:{
+        ai:"chatgpt",prompt,url:"https://chatgpt.com/",images,mode:state.mode
+      }}));
       button.textContent=state.mode==="front"?"원본·맵·프롬프트 전달 완료":"원본·프롬프트 전달 완료";
       setTimeout(()=>{button.textContent=originalLabel;button.disabled=false},1800);
       return;
     }
     await navigator.clipboard.writeText(prompt);
-    window.open(url,"_blank");
+    window.open("https://chatgpt.com/","_blank");
     alert("익스텐션이 연결되지 않아 프롬프트만 복사했습니다. 이미지는 직접 첨부해 주세요.");
   }catch(err){
     alert(`전달 준비 중 오류가 발생했습니다: ${err.message}`);
   }finally{
     if(button.disabled&&button.textContent==="이미지 준비 중…"){button.textContent=originalLabel;button.disabled=false}
   }
-}
-$("chatgptBtn").onclick=()=>sendToAI("chatgpt");
-$("geminiBtn").onclick=()=>sendToAI("gemini");
+};
+$("geminiBtn").onclick=async()=>{
+  setAI("gemini");
+  const prompt=$('promptBox').value;
+  if(!state.image)return alert("먼저 무대 이미지를 업로드하세요.");
+  if(!prompt)return alert(state.mode==="front"?"먼저 장비 위치를 지정하세요.":"프롬프트를 확인하세요.");
+  const button=$("geminiBtn"),originalLabel=button.textContent;
+  button.disabled=true;button.textContent="이미지 준비 중…";
+  try{
+    const originalImage=await blobUrlToDataUrl(state.image);
+    const images=[{dataUrl:originalImage,name:state.imageName||"stage-reference.png"}];
+    if(document.documentElement.getAttribute("data-dlc-extension")==="true"){
+      window.dispatchEvent(new CustomEvent("extension:openAIPrompt",{detail:{
+        ai:"gemini",prompt,url:"https://gemini.google.com/",images,mode:state.mode
+      }}));
+      button.textContent="원본·프롬프트 전달 완료";
+      setTimeout(()=>{button.textContent=originalLabel;button.disabled=false},1800);
+      return;
+    }
+    await navigator.clipboard.writeText(prompt);
+    window.open("https://gemini.google.com/","_blank");
+    alert("익스텐션이 연결되지 않아 프롬프트만 복사했습니다. 이미지는 직접 첨부해 주세요.");
+  }catch(err){
+    alert(`전달 준비 중 오류가 발생했습니다: ${err.message}`);
+  }finally{
+    if(button.disabled&&button.textContent==="이미지 준비 중…"){button.textContent=originalLabel;button.disabled=false}
+  }
+};
 
 setMode("front");render();
 </script>
